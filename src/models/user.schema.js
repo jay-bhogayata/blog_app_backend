@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "node:crypto";
@@ -29,6 +29,31 @@ const userSchema = new mongoose.Schema(
       enum: Object.values(AuthRole),
       default: AuthRole.USER,
     },
+    bio: {
+      type: String,
+      maxLength: [500, "user bio can not more then 500 chars."],
+    },
+    image: {
+      type: String,
+    },
+    following: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    followers: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    bookMarks: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Bookmark",
+      },
+    ],
     forgotPasswordToken: String,
     forgotPasswordExpiry: Date,
   },
