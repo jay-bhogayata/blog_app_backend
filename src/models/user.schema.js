@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 import AuthRole from "../utils/AuthRole.js";
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -31,3 +33,17 @@ const userSchema = new mongoose.Schema(
 );
 
 export default mongoose.model("User", userSchema);
+
+// hash the password before saving
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
+
+userSchema.methods = {
+  // compare user entered password
+  comparePassword: async function (enteredPassword) {
+    return await bcrypt.compare(enteredPassword, this.password);
+  },
+};
