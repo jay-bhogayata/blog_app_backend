@@ -1,6 +1,9 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import crypto from "node:crypto";
 import AuthRole from "../utils/AuthRole.js";
+import config from "../config/index.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -32,8 +35,6 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("User", userSchema);
-
 // hash the password before saving
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
@@ -46,4 +47,25 @@ userSchema.methods = {
   comparePassword: async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
   },
+
+  //generate json web token
+  generateJwt: function () {
+    return jwt.sign({ _id: this._id, role: this.role }, config.JWT_SECRET, {
+      expiresIn: config.JWT_EXPIRY,
+    });
+  },
+
+  // generating forgot password token
+  generateForgotPasswordToken: function () {
+    const token = crypto.randomBytes(20).toString("hex");
+
+    this.forgotPasswordToken = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+
+    this.forgotPasswordExpiry = Date.now() + 20 * 60 * 1000;
+  },
 };
+
+export default mongoose.model("User", userSchema);
